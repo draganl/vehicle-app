@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useCreateVehicleMakeMutation, useUpdateVehicleMakeMutation } from '../store/services/vehicleMakeApi';
+import React, { useEffect } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import {
+  useCreateVehicleMakeMutation,
+  useUpdateVehicleMakeMutation,
+} from '../store/services/vehicleMakeApi';
 import type { VehicleMake } from '../store/services/vehicleMakeApi';
 
 interface VehicleMakeFormModalProps {
@@ -8,22 +12,22 @@ interface VehicleMakeFormModalProps {
   initialData: VehicleMake | null;
 }
 
+type FormValues = {
+  Name: string;
+  Abrv: string;
+};
+
 const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onClose, initialData }) => {
-  const [name, setName] = useState('');
-  const [abrv, setAbrv] = useState('');
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+    defaultValues: initialData || { Name: '', Abrv: '' },
+  });
 
   const [createVehicleMake, { isLoading: isCreating, isSuccess: createSuccess }] = useCreateVehicleMakeMutation();
   const [updateVehicleMake, { isLoading: isUpdating, isSuccess: updateSuccess }] = useUpdateVehicleMakeMutation();
 
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.Name);
-      setAbrv(initialData.Abrv);
-    } else {
-      setName('');
-      setAbrv('');
-    }
-  }, [initialData, isOpen]);
+    reset(initialData || { Name: '', Abrv: '' });
+  }, [initialData, isOpen, reset]);
 
   useEffect(() => {
     if (createSuccess || updateSuccess) {
@@ -31,13 +35,12 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
     }
   }, [createSuccess, updateSuccess, onClose]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
       if (initialData) {
-        await updateVehicleMake({ id: initialData.id, Name: name, Abrv: abrv }).unwrap();
+        await updateVehicleMake({ id: initialData.id, ...data }).unwrap();
       } else {
-        await createVehicleMake({ Name: name, Abrv: abrv }).unwrap();
+        await createVehicleMake(data).unwrap();
       }
     } catch (err) {
       alert('Greška pri spremanju proizvođača: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Nepoznata greška'));
@@ -54,32 +57,30 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
       <div className="relative p-8 bg-white w-96 max-w-full rounded-lg shadow-xl">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">{title}</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="Name" className="block text-gray-700 text-sm font-bold mb-2">
               Naziv:
             </label>
             <input
               type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="Name"
+              {...register('Name', { required: 'Naziv je obavezan' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
             />
+            {errors.Name && <p className="text-red-500 text-xs italic mt-1">{errors.Name.message}</p>}
           </div>
           <div className="mb-6">
-            <label htmlFor="abrv" className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="Abrv" className="block text-gray-700 text-sm font-bold mb-2">
               Skraćenica:
             </label>
             <input
               type="text"
-              id="abrv"
-              value={abrv}
-              onChange={(e) => setAbrv(e.target.value)}
+              id="Abrv"
+              {...register('Abrv', { required: 'Skraćenica je obavezna' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
             />
+            {errors.Abrv && <p className="text-red-500 text-xs italic mt-1">{errors.Abrv.message}</p>}
           </div>
           <div className="flex justify-end gap-4">
             <button
