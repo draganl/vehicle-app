@@ -1,15 +1,32 @@
-// src/pages/VehicleModelPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetVehicleModelsQuery, useDeleteVehicleModelMutation } from '../store/services/vehicleMakeApi';
 import type { VehicleModel } from '../store/services/vehicleMakeApi';
 import VehicleModelFormModal from '../components/VehicleModelFormModal';
 
+const LOCAL_STORAGE_KEY = 'vehicleModelsFilter';
+
 const VehicleModelPage: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState('Name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filter, setFilter] = useState('');
+  const getInitialState = () => {
+    const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+    return {
+      page: 1,
+      pageSize: 10,
+      sortBy: 'Name',
+      sortOrder: 'asc',
+      filter: '',
+    };
+  };
+
+  const initialState = getInitialState();
+
+  const [page, setPage] = useState(initialState.page);
+  const [pageSize, setPageSize] = useState(initialState.pageSize);
+  const [sortBy, setSortBy] = useState(initialState.sortBy);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialState.sortOrder);
+  const [filter, setFilter] = useState(initialState.filter);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentModel, setCurrentModel] = useState<VehicleModel | null>(null);
@@ -23,6 +40,11 @@ const VehicleModelPage: React.FC = () => {
   });
 
   const [deleteVehicleModel, { isLoading: isDeleting }] = useDeleteVehicleModelMutation();
+
+  useEffect(() => {
+    const stateToSave = { page, pageSize, sortBy, sortOrder, filter };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [page, pageSize, sortBy, sortOrder, filter]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Jeste li sigurni da želite obrisati ovaj model?')) {

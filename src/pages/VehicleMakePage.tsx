@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetVehicleMakesQuery, useDeleteVehicleMakeMutation } from '../store/services/vehicleMakeApi';
 import type { VehicleMake } from '../store/services/vehicleMakeApi';
 import VehicleMakeFormModal from '../components/VehicleMakeFormModal';
 
+const LOCAL_STORAGE_KEY = 'vehicleMakesFilter';
+
 const VehicleMakePage: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState('Name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filter, setFilter] = useState('');
+  const getInitialState = () => {
+    const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+    return {
+      page: 1,
+      pageSize: 10,
+      sortBy: 'Name',
+      sortOrder: 'asc',
+      filter: '',
+    };
+  };
+
+  const initialState = getInitialState();
+
+  const [page, setPage] = useState(initialState.page);
+  const [pageSize, setPageSize] = useState(initialState.pageSize);
+  const [sortBy, setSortBy] = useState(initialState.sortBy);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialState.sortOrder);
+  const [filter, setFilter] = useState(initialState.filter);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentMake, setCurrentMake] = useState<VehicleMake | null>(null);
@@ -22,6 +40,11 @@ const VehicleMakePage: React.FC = () => {
   });
 
   const [deleteVehicleMake, { isLoading: isDeleting }] = useDeleteVehicleMakeMutation();
+
+  useEffect(() => {
+    const stateToSave = { page, pageSize, sortBy, sortOrder, filter };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [page, pageSize, sortBy, sortOrder, filter]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Jeste li sigurni da želite obrisati ovog proizvođača?')) {
@@ -53,7 +76,7 @@ const VehicleMakePage: React.FC = () => {
   }
 
   if (isError) {
-    return <div className="p-5 text-center text-red-500 text-lg">Greška pri učitavanju proizvođača vozila: {error && 'data' in error ? JSON.stringify(error.data) : 'Nepoznata greška'}</div>;
+    return <div className="p-5 text-center text-red-500 text-lg">Greška pri učitavanju proizvođača: {error && 'data' in error ? JSON.stringify(error.data) : 'Nepoznata greška'}</div>;
   }
 
   if (!data || !data.data) {
