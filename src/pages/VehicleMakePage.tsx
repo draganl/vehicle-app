@@ -47,11 +47,11 @@ const VehicleMakePage: React.FC = () => {
   }, [page, pageSize, sortBy, sortOrder, filter]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Jeste li sigurni da želite obrisati ovog proizvođača?')) {
+    if (window.confirm('Are you sure you want to delete this vehicle make?')) {
       try {
         await deleteVehicleMake(id).unwrap();
       } catch (err) {
-        alert('Greška pri brisanju proizvođača: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Nepoznata greška'));
+        alert('Error deleting vehicle make: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Unknown error'));
       }
     }
   };
@@ -64,6 +64,7 @@ const VehicleMakePage: React.FC = () => {
   const handleAddNew = () => {
     setCurrentMake(null);
     setIsModalOpen(true);
+    console.log(setIsModalOpen);
   };
 
   const handleCloseModal = () => {
@@ -72,15 +73,15 @@ const VehicleMakePage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-5 text-center text-lg">Učitavanje proizvođača vozila...</div>;
+    return <div className="p-5 text-center text-lg">Loading vehicle makes...</div>;
   }
 
   if (isError) {
-    return <div className="p-5 text-center text-red-500 text-lg">Greška pri učitavanju proizvođača: {error && 'data' in error ? JSON.stringify(error.data) : 'Nepoznata greška'}</div>;
+    return <div className="p-5 text-center text-red-500 text-lg">Error loading vehicle makes: {error && 'data' in error ? JSON.stringify(error.data) : 'Unknown error'}</div>;
   }
 
   if (!data || !data.data) {
-    return <div className="p-5 text-center text-lg">Nema pronađenih proizvođača vozila.</div>;
+    return <div className="p-5 text-center text-lg">No vehicle makes found.</div>;
   }
 
   const totalItems = data.count || 0;
@@ -114,18 +115,17 @@ const VehicleMakePage: React.FC = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Proizvođači vozila</h1>
-
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Vehicle Makes</h1>
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
         <input
           type="text"
-          placeholder="Filtriraj po nazivu"
+          placeholder="Filter by Name"
           value={filter}
           onChange={handleFilterChange}
           className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
         />
         <div className="flex items-center gap-4">
-          <span className="mr-2 text-gray-700">Stavki po stranici:</span>
+          <span className="mr-2 text-gray-700">Items per page:</span>
           <select value={pageSize} onChange={handlePageSizeChange} className="p-2 border border-gray-300 rounded-md shadow-sm">
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -135,11 +135,10 @@ const VehicleMakePage: React.FC = () => {
             onClick={handleAddNew}
             className="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150 ease-in-out shadow-sm"
           >
-            Dodaj novog proizvođača
+            Add New Make
           </button>
         </div>
       </div>
-
       <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
@@ -154,16 +153,16 @@ const VehicleMakePage: React.FC = () => {
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
                 onClick={() => handleSortChange('Name')}
               >
-                Naziv {sortBy === 'Name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                Name {sortBy === 'Name' && (sortOrder === 'asc' ? '▲' : '▼')}
               </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
                 onClick={() => handleSortChange('Abrv')}
               >
-                Skraćenica {sortBy === 'Abrv' && (sortOrder === 'asc' ? '▲' : '▼')}
+                Abbreviation {sortBy === 'Abrv' && (sortOrder === 'asc' ? '▲' : '▼')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Akcije
+                Actions
               </th>
             </tr>
           </thead>
@@ -179,14 +178,14 @@ const VehicleMakePage: React.FC = () => {
                       onClick={() => handleEdit(make)}
                       className="text-indigo-600 hover:text-indigo-900 mr-4 transition duration-150 ease-in-out"
                     >
-                      Uredi
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDelete(make.id)}
                       disabled={isDeleting}
                       className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
                     >
-                      {isDeleting ? 'Brisanje...' : 'Obriši'}
+                      {isDeleting ? 'Deleting...' : 'Delete'}
                     </button>
                   </td>
                 </tr>
@@ -195,7 +194,7 @@ const VehicleMakePage: React.FC = () => {
               <React.Fragment>
                 <tr>
                   <td colSpan={4} className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 italic">
-                    Nema proizvođača koji odgovaraju vašim kriterijima.
+                    No vehicle makes found that match your criteria.
                   </td>
                 </tr>
               </React.Fragment>
@@ -203,26 +202,25 @@ const VehicleMakePage: React.FC = () => {
           </tbody>
         </table>
       </div>
-
       <div className="mt-6 flex justify-center items-center gap-4">
         <button
           onClick={() => handlePageChange(page - 1)}
           disabled={page === 1}
           className="py-2 px-4 border border-gray-300 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
         >
-          Prethodna
+          Previous
         </button>
-        <span className="text-lg font-medium text-gray-700">Stranica {page} od {totalPages}</span>
+        <span className="text-lg font-medium text-gray-700">Page {page} of {totalPages}</span>
         <button
           onClick={() => handlePageChange(page + 1)}
           disabled={page === totalPages}
           className="py-2 px-4 border border-gray-300 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out shadow-sm"
         >
-          Sljedeća
+          Next
         </button>
       </div>
-
       <VehicleMakeFormModal
+        key={isModalOpen ? 'make-modal-open' : 'make-modal-closed'}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         initialData={currentMake}

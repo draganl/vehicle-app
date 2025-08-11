@@ -29,8 +29,10 @@ const VehicleModelFormModal: React.FC<VehicleModelFormModalProps> = ({ isOpen, o
   const { data: makes, isLoading: areMakesLoading } = useGetAllVehicleMakesQuery();
 
   useEffect(() => {
-    reset(initialData || { Name: '', Abrv: '', MakeId: '' });
-  }, [initialData, isOpen, reset]);
+    if (isOpen) {
+      reset(initialData || { Name: '', Abrv: '', MakeId: '' });
+    }
+  }, [isOpen, initialData, reset]);
 
   useEffect(() => {
     if (createSuccess || updateSuccess) {
@@ -46,15 +48,15 @@ const VehicleModelFormModal: React.FC<VehicleModelFormModalProps> = ({ isOpen, o
         await createVehicleModel(data).unwrap();
       }
     } catch (err) {
-      alert('Greška pri spremanju modela: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Nepoznata greška'));
+      alert('Error saving vehicle model: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Unknown error'));
     }
   };
 
   if (!isOpen) return null;
 
-  const title = initialData ? 'Uredi model vozila' : 'Dodaj novi model vozila';
-  const submitButtonText = initialData ? 'Spremi promjene' : 'Dodaj model';
-  const isLoading = isCreating || isUpdating;
+  const title = initialData ? 'Edit Vehicle Model' : 'Add New Vehicle Model';
+  const submitButtonText = initialData ? 'Save Changes' : 'Add Model';
+  const isSaving = isCreating || isUpdating;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
@@ -63,17 +65,17 @@ const VehicleModelFormModal: React.FC<VehicleModelFormModalProps> = ({ isOpen, o
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label htmlFor="MakeId" className="block text-gray-700 text-sm font-bold mb-2">
-              Proizvođač:
+              Make:
             </label>
             {areMakesLoading ? (
-              <p>Učitavanje proizvođača...</p>
+              <p>Loading makes...</p>
             ) : (
               <select
                 id="MakeId"
-                {...register('MakeId', { required: 'Odabir proizvođača je obavezan' })}
+                {...register('MakeId', { required: 'Vehicle make is required' })}
                 className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               >
-                <option value="" disabled>Odaberite proizvođača</option>
+                <option value="" disabled>Select a make</option>
                 {makes?.map((make) => (
                   <option key={make.id} value={make.id}>
                     {make.Name}
@@ -85,24 +87,24 @@ const VehicleModelFormModal: React.FC<VehicleModelFormModalProps> = ({ isOpen, o
           </div>
           <div className="mb-4">
             <label htmlFor="Name" className="block text-gray-700 text-sm font-bold mb-2">
-              Naziv modela:
+              Model Name:
             </label>
             <input
               type="text"
               id="Name"
-              {...register('Name', { required: 'Naziv modela je obavezan' })}
+              {...register('Name', { required: 'Model name is required' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
             {errors.Name && <p className="text-red-500 text-xs italic mt-1">{errors.Name.message}</p>}
           </div>
           <div className="mb-6">
             <label htmlFor="Abrv" className="block text-gray-700 text-sm font-bold mb-2">
-              Skraćenica:
+              Abbreviation:
             </label>
             <input
               type="text"
               id="Abrv"
-              {...register('Abrv', { required: 'Skraćenica je obavezna' })}
+              {...register('Abrv', { required: 'Abbreviation is required' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
             {errors.Abrv && <p className="text-red-500 text-xs italic mt-1">{errors.Abrv.message}</p>}
@@ -112,16 +114,16 @@ const VehicleModelFormModal: React.FC<VehicleModelFormModalProps> = ({ isOpen, o
               type="button"
               onClick={onClose}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
-              disabled={isLoading}
+              disabled={isSaving}
             >
-              Odustani
+              Cancel
             </button>
             <button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
+              disabled={isSaving}
             >
-              {isLoading ? 'Spremanje...' : submitButtonText}
+              {isSaving ? 'Saving...' : submitButtonText}
             </button>
           </div>
         </form>

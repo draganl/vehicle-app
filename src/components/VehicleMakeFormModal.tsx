@@ -26,8 +26,10 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
   const [updateVehicleMake, { isLoading: isUpdating, isSuccess: updateSuccess }] = useUpdateVehicleMakeMutation();
 
   useEffect(() => {
-    reset(initialData || { Name: '', Abrv: '' });
-  }, [initialData, isOpen, reset]);
+    if (isOpen) {
+      reset(initialData || { Name: '', Abrv: '' });
+    }
+  }, [isOpen, initialData, reset]);
 
   useEffect(() => {
     if (createSuccess || updateSuccess) {
@@ -43,15 +45,15 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
         await createVehicleMake(data).unwrap();
       }
     } catch (err) {
-      alert('Greška pri spremanju proizvođača: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Nepoznata greška'));
+      alert('Error saving vehicle make: ' + (err && 'data' in err ? JSON.stringify(err.data) : 'Unknown error'));
     }
   };
 
   if (!isOpen) return null;
 
-  const title = initialData ? 'Uredi proizvođača vozila' : 'Dodaj novog proizvođača vozila';
-  const submitButtonText = initialData ? 'Spremi promjene' : 'Dodaj proizvođača';
-  const isLoading = isCreating || isUpdating;
+  const title = initialData ? 'Edit Vehicle Make' : 'Add New Vehicle Make';
+  const submitButtonText = initialData ? 'Save Changes' : 'Add Make';
+  const isSaving = isCreating || isUpdating;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
@@ -60,24 +62,24 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label htmlFor="Name" className="block text-gray-700 text-sm font-bold mb-2">
-              Naziv:
+              Name:
             </label>
             <input
               type="text"
               id="Name"
-              {...register('Name', { required: 'Naziv je obavezan' })}
+              {...register('Name', { required: 'Name is required' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
             {errors.Name && <p className="text-red-500 text-xs italic mt-1">{errors.Name.message}</p>}
           </div>
           <div className="mb-6">
             <label htmlFor="Abrv" className="block text-gray-700 text-sm font-bold mb-2">
-              Skraćenica:
+              Abbreviation:
             </label>
             <input
               type="text"
               id="Abrv"
-              {...register('Abrv', { required: 'Skraćenica je obavezna' })}
+              {...register('Abrv', { required: 'Abbreviation is required' })}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
             {errors.Abrv && <p className="text-red-500 text-xs italic mt-1">{errors.Abrv.message}</p>}
@@ -87,16 +89,16 @@ const VehicleMakeFormModal: React.FC<VehicleMakeFormModalProps> = ({ isOpen, onC
               type="button"
               onClick={onClose}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out"
-              disabled={isLoading}
+              disabled={isSaving}
             >
-              Odustani
+              Cancel
             </button>
             <button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
+              disabled={isSaving}
             >
-              {isLoading ? 'Spremanje...' : submitButtonText}
+              {isSaving ? 'Saving...' : submitButtonText}
             </button>
           </div>
         </form>
